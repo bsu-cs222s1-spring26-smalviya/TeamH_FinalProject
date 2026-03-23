@@ -1,5 +1,4 @@
 package edu.bsu.cs222.finalproject;
-//import java.util.Scanner;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -11,14 +10,12 @@ public class RecipeGrabber {
     public static void main(String[] args) throws IOException, URISyntaxException {
         URLConnection connection = connectToMealDb();
         String data =readJsonAsStringFrom(connection);
-        //printData(data);
-
+        JsonDataParser jsonDataParser = new JsonDataParser();
+        String parsedData = jsonDataParser.parse(data);
+        printData(parsedData);
     }
 
     public static URLConnection connectToMealDb() throws IOException, URISyntaxException{
-        //Scanner scanner = new Scanner(System.in);
-        //System.out.print("Enter ingredient: ");
-        //String input = scanner.nextLine();
 
         String encodedUrlString = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" +
                 URLEncoder.encode("chicken_breast", Charset.defaultCharset()) +
