@@ -1,4 +1,4 @@
-import java.util.Scanner;
+//import java.util.Scanner;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,17 +14,17 @@ public class RecipeGrabber {
     }
 
     public static URLConnection connectToMealDb() throws IOException, URISyntaxException{
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter query: ");
-        String input = scanner.nextLine();
+        //Scanner scanner = new Scanner(System.in);
+        //System.out.print("Enter ingredient: ");
+        //String input = scanner.nextLine();
 
-        String encodedUrlString = "www.themealdb.com/api/json/v1/1/filter.php?i=" +
-                URLEncoder.encode(input, Charset.defaultCharset()) +
+        String encodedUrlString = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" +
+                URLEncoder.encode("chicken_breast", Charset.defaultCharset()) +
                 "&rvprop=timestamp" + URLEncoder.encode("|",Charset.defaultCharset()) + "user&rvlimit=4&redirects";
         URI uri = new URI(encodedUrlString);
         URLConnection connection = uri.toURL().openConnection();
         connection.setRequestProperty("User-Agent",
-                "WikipediaConnectionDemo/0.1 (academic use; rj.martin@bsu.edu)");
+                "FinalProjectCs222/0.1 (academic use; rj.martin@bsu.edu)");
         connection.connect();
         return connection;
     }
