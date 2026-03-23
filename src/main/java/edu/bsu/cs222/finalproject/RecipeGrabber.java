@@ -11,7 +11,7 @@ public class RecipeGrabber {
         URLConnection connection = connectToMealDb();
         String data =readJsonAsStringFrom(connection);
         JsonDataParser jsonDataParser = new JsonDataParser();
-        String parsedData = jsonDataParser.parse(data);
+        String[] parsedData = jsonDataParser.parse(data);
         printData(parsedData);
     }
 
@@ -30,7 +30,9 @@ public class RecipeGrabber {
     public static String readJsonAsStringFrom(URLConnection connection) throws IOException {
         return new String(connection.getInputStream().readAllBytes(), Charset.defaultCharset());
     }
-    public static void printData(String data){
-        System.out.println(data);
+    public static void printData(String[] data){
+        for (String datum : data) {
+            System.out.println(datum);
+        }
     }
 }
