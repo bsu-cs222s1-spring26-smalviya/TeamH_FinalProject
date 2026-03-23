@@ -1,3 +1,4 @@
+package edu.bsu.cs222.finalproject;
 //import java.util.Scanner;
 import java.io.IOException;
 import java.net.URI;
@@ -10,7 +11,8 @@ public class RecipeGrabber {
     public static void main(String[] args) throws IOException, URISyntaxException {
         URLConnection connection = connectToMealDb();
         String data =readJsonAsStringFrom(connection);
-        printData(data);
+        //printData(data);
+
     }
 
     public static URLConnection connectToMealDb() throws IOException, URISyntaxException{
