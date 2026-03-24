@@ -3,6 +3,6 @@ Upon entering a recipe ingredient, a series of available recipes containing that
 Authors:
 RJ Martin
 
-Griffin Roach
+Griffin B Roach
 
 
