@@ -1,6 +1,11 @@
-Upon entering a recipe ingredient, a series of available recipes containing that ingredient are returned
+Upon entering a recipe ingredient, a series of available recipes containing that ingredient is returned
 
 Authors:
-RJ Martin
+RJ Martin,
 
+Jiahao Peng,
+
+Dwight Williams,
+
+Griffin B Roach,
 
