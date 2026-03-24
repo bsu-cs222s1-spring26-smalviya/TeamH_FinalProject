@@ -13,13 +13,21 @@ repositories {
 val javafxVersion = "21.0.2"
 
 dependencies {
+    // JavaFX
     implementation("org.openjfx:javafx-base:$javafxVersion:win")
     implementation("org.openjfx:javafx-graphics:$javafxVersion:win")
     implementation("org.openjfx:javafx-controls:$javafxVersion:win")
     implementation("org.openjfx:javafx-fxml:$javafxVersion:win")
 
+    // JSON parsing
+    implementation("com.jayway.jsonpath:json-path:2.9.0")
+    implementation("net.minidev:json-smart:2.4.10")   // <-- REQUIRED for JSONArray
+    implementation("com.github.openjson:openjson:1.0.12")
+
+    // MealDB wrapper (optional)
     implementation("io.github.thexxiv:mealdb:1.0.0")
 
+    // Testing
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

@@ -1,38 +1,21 @@
 package edu.bsu.cs222.finalproject;
+
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class RecipeGrabber {
-    public static void main(String[] args) throws IOException, URISyntaxException {
-        URLConnection connection = connectToMealDb();
-        String data =readJsonAsStringFrom(connection);
-        JsonDataParser jsonDataParser = new JsonDataParser();
-        String[] parsedData = jsonDataParser.parse(data);
-        printData(parsedData);
-    }
 
-    public static URLConnection connectToMealDb() throws IOException, URISyntaxException{
+    public String fetchRecipesByIngredient(String ingredient) throws IOException {
+        String encodedIngredient = URLEncoder.encode(ingredient, StandardCharsets.UTF_8);
 
-        String encodedUrlString = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" +
-                URLEncoder.encode("chicken_breast", Charset.defaultCharset()) +
-                "&rvprop=timestamp" + URLEncoder.encode("|",Charset.defaultCharset()) + "user&rvlimit=4&redirects";
-        URI uri = new URI(encodedUrlString);
-        URLConnection connection = uri.toURL().openConnection();
-        connection.setRequestProperty("User-Agent",
-                "FinalProjectCs222/0.1 (academic use; rj.martin@bsu.edu)");
-        connection.connect();
-        return connection;
-    }
-    public static String readJsonAsStringFrom(URLConnection connection) throws IOException {
-        return new String(connection.getInputStream().readAllBytes(), Charset.defaultCharset());
-    }
-    public static void printData(String[] data){
-        for (String datum : data) {
-            System.out.println(datum);
-        }
+        String url = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" + encodedIngredient;
+
+        URLConnection connection = URI.create(url).toURL().openConnection();
+        connection.setRequestProperty("User-Agent", "CS222-FinalProject/1.0");
+
+        return new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     }
 }

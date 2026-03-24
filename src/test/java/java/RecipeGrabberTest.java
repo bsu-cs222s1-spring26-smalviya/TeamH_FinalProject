@@ -1,22 +1,35 @@
-package java;
+package edu.bsu.cs222.finalproject;
 
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RecipeGrabberTest {
 
     @Test
-    void main() {
+    void testFetchRecipesByIngredientReturnsJson() throws Exception {
+        RecipeGrabber grabber = new RecipeGrabber();
+        String json = grabber.fetchRecipesByIngredient("chicken");
+
+        assertNotNull(json);
+        assertTrue(json.contains("meals"));
     }
 
     @Test
-    void connectToMealDb() {
-    }
+    void testJsonParserExtractsMealNames() {
+        String fakeJson = """
+                {
+                  "meals": [
+                    {"strMeal": "Chicken Curry"},
+                    {"strMeal": "Chicken Alfredo"}
+                  ]
+                }
+                """;
 
-    @Test
-    void readJsonAsStringFrom() {
-    }
+        JsonDataParser parser = new JsonDataParser();
+        String[] meals = parser.parseMeals(fakeJson);
 
-    @Test
-    void printData() {
+        assertEquals(2, meals.length);
+        assertEquals("Chicken Curry", meals[0]);
+        assertEquals("Chicken Alfredo", meals[1]);
     }
 }
