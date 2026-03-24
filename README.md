@@ -2,8 +2,10 @@ Upon entering a recipe ingredient, a series of available recipes containing that
 
 Authors:
 RJ Martin,
-Jiahao Peng,
-Dwight Williams,
-Griffin B Roach,
 
+Jiahao Peng,
+
+Dwight Williams,
+
+Griffin B Roach,
 
