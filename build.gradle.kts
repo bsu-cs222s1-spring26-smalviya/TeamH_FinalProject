@@ -10,7 +10,7 @@ repositories {
     mavenCentral()
 }
 
-val javafxVersion = "21"
+val javafxVersion = "21.0.2"
 
 dependencies {
     implementation("org.openjfx:javafx-base:$javafxVersion:win")
