@@ -13,12 +13,15 @@ public class RecipeAppSkeleton extends Application {
     @Override
     public void start(Stage stage) {
         Label title = new Label("Recipe Finder");
+
         TextField searchField = new TextField();
-        searchField.setPromptText("Search for an ingredient...");
+        searchField.setPromptText("Search for an ingredient");
 
         Button searchButton = new Button("Search");
+
         ListView<String> resultsList = new ListView<>();
 
+        // Ingredient search
         searchButton.setOnAction(e -> {
             String ingredient = searchField.getText().trim();
 
@@ -35,7 +38,9 @@ public class RecipeAppSkeleton extends Application {
                     String json = grabber.fetchRecipesByIngredient(ingredient);
 
                     JsonDataParser parser = new JsonDataParser();
-                    String[] meals = parser.parseMeals(json);
+
+                    // NEW: now using parseMealNamesAndIds()
+                    String[] meals = parser.parseMealNamesAndIds(json);
 
                     javafx.application.Platform.runLater(() -> {
                         if (meals.length == 0) {
@@ -53,8 +58,51 @@ public class RecipeAppSkeleton extends Application {
             }).start();
         });
 
-        VBox layout = new VBox(10, title, searchField, searchButton, resultsList);
-        Scene scene = new Scene(layout, 400, 500);
+        // NEW: Clicking a meal loads full recipe details
+        resultsList.setOnMouseClicked(event -> {
+            String selected = resultsList.getSelectionModel().getSelectedItem();
+            if (selected == null || !selected.contains("ID:")) {
+                return;
+            }
+
+            // NEW: Extract ID from "(ID: ####)"
+            String id = selected.substring(selected.indexOf("ID:") + 4, selected.indexOf(")"));
+
+            resultsList.getItems().setAll("Loading recipe...");
+
+            new Thread(() -> {
+                try {
+                    RecipeGrabber grabber = new RecipeGrabber();
+
+                    // NEW: fetch full recipe by ID
+                    String json = grabber.fetchRecipeById(id);
+
+                    JsonDataParser parser = new JsonDataParser();
+
+                    // NEW: parse full recipe details
+                    String details = parser.parseMealDetails(json);
+
+                    javafx.application.Platform.runLater(() ->
+                            resultsList.getItems().setAll(details)
+                    );
+
+                } catch (Exception ex) {
+                    javafx.application.Platform.runLater(() ->
+                            resultsList.getItems().setAll("Error loading recipe details.")
+                    );
+                }
+            }).start();
+        });
+
+        VBox layout = new VBox(
+                10,
+                title,
+                searchField,
+                searchButton,
+                resultsList
+        );
+
+        Scene scene = new Scene(layout, 400, 550);
 
         stage.setScene(scene);
         stage.setTitle("Recipe Finder");
@@ -65,3 +113,4 @@ public class RecipeAppSkeleton extends Application {
         launch();
     }
 }
+
