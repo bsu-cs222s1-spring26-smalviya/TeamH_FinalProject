@@ -1,8 +1,10 @@
 package finalproject;
 
+import edu.bsu.cs222.finalproject.User;
 import edu.bsu.cs222.finalproject.UserStorage;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,14 +26,5 @@ class UserStorageTest {
     void userExists() {
         storage.addUser("userNonExist", "password1");
         assertTrue(storage.userExists("userNonExist"));
-    }
-
-    @Test
-    void getAllUsers() {
-        Map<String, String> users = new HashMap<>();
-        users.put("userNonExist", "password1");
-
-        storage.addUser("userNonExist", "password1");
-        assertEquals(users, storage.getAllUsers());
     }
 }

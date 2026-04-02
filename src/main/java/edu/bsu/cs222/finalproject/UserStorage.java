@@ -1,37 +1,52 @@
 package edu.bsu.cs222.finalproject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserStorage {
-    private Map<String, String> users;
-
-    public UserStorage() {
-        this.users = new HashMap<>();
-    }
+    private ArrayList<User> users = new ArrayList<>();
+    private User activeUser;
 
     public boolean addUser(String username, String password) {
-        if (users.containsKey(username)) {
-            return false;
+        for (User user: users) {
+            if (username.equals(user.getUsername())) {
+                return false;
+            }
         }
 
-        users.put(username, password);
+        User user = new User(username, password);
+
+        users.add(user);
         return true;
     }
 
     public boolean login(String username, String password) {
-        if (!users.containsKey(username)) {
-            return false;
+        for (User user: users) {
+            if (!username.equals(user.getUsername())) {
+                return false;
+            }
+            else {
+                activeUser = user;
+            }
         }
 
-        return users.get(username).equals(password);
+        if (password.equals(activeUser.getPassword())) {
+            return true;
+        }
+
+        else {
+            return false;
+        }
     }
 
     public boolean userExists(String username) {
-        return users.containsKey(username);
-    }
-
-    public Map<String, String> getAllUsers() {
-        return users;
+        for (User user: users) {
+            if (user.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
