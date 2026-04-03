@@ -1,5 +1,7 @@
-package edu.bsu.cs222.finalproject;
+package finalproject;
 
+import edu.bsu.cs222.finalproject.JsonDataParser;
+import edu.bsu.cs222.finalproject.RecipeGrabber;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
