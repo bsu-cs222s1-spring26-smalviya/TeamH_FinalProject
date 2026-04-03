@@ -60,9 +60,9 @@ public class UserStorageAttemptTwo {
                 System.exit(0);//does not need to stay once in javafx
             } else{
                 System.out.println("Enter username: ");//this line and the one checking for password will not be necessary in javafx. user will stay logged in
-                String username = sc.nextLine();
+                username = sc.nextLine();
                 System.out.println("Enter password: ");//this line and the one checking for username will not be needed once in javafx
-                String password = sc.nextLine();
+                password = sc.nextLine();
                 System.out.println("Enter recipe name: ");
                 recipeName = sc.nextLine();
                 if (recipeName.contains(" ")){
