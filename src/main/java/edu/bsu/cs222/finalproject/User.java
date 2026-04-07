@@ -3,6 +3,7 @@ package edu.bsu.cs222.finalproject;
 import java.util.ArrayList;
 
 public class User {
+
     private String username;
     private String password;
     private ArrayList<String> savedRecipes;
@@ -11,10 +12,12 @@ public class User {
         this.username = username;
         this.password = password;
 
+        // MAJOR FIX: savedRecipes was never initialized → caused NullPointerException
+        this.savedRecipes = new ArrayList<>();
     }
 
-    public void addRecipe(String ID) {
-        savedRecipes.add(ID);
+    public void addRecipe(String recipeName) {
+        savedRecipes.add(recipeName);
     }
 
     public String getUsername() {
@@ -35,9 +38,5 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public void setSavedRecipes(ArrayList<String> savedRecipes) {
-        this.savedRecipes = savedRecipes;
     }
 }

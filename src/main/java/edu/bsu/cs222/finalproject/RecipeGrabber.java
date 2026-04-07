@@ -13,12 +13,14 @@ public class RecipeGrabber {
         String url = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" + encodedIngredient;
 
         URLConnection connection = URI.create(url).toURL().openConnection();
+
+        // MAJOR CHANGE: added User-Agent header to avoid API blocking
         connection.setRequestProperty("User-Agent", "CS222-FinalProject/1.0");
 
         return new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     }
 
-    // NEW: Fetch full recipe details by ID
+    // MAJOR FEATURE: fetch full recipe details by ID
     public String fetchRecipeById(String id) throws IOException {
         String url = "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id;
 
@@ -28,3 +30,4 @@ public class RecipeGrabber {
         return new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     }
 }
+
