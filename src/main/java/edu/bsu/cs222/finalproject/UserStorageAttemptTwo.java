@@ -73,7 +73,7 @@ public class UserStorageAttemptTwo {
                 //addRecipe(username, password, recipeName);
             }
         }
-        filename = "C:\\Users\\rjmar\\CS222\\FinalProjectCs222\\src\\main\\java\\edu\\bsu\\cs222\\finalproject\\logins";
+        filename = "C:\\Users\\graff\\IdeaProjects\\TeamH_FinalProject\\src\\main\\java\\edu\\bsu\\cs222\\finalproject\\logins";
         try (Scanner fileToRead = new Scanner(new File(filename))) {
 
             for (String line; fileToRead.hasNextLine() && (line = fileToRead.nextLine()) != null; ) {
@@ -114,14 +114,18 @@ public class UserStorageAttemptTwo {
 
         } else if (answer.equalsIgnoreCase("l")) {
 
+            boolean failedLogin = true;
+
             for (String loginDatum : loginData) {
                 if (loginDatum.equals(checkUsername + " " + checkPassword)) {
                     permission = true;
                     System.out.println("You're logged in!");
+                    failedLogin = false;
                     break;
-                } else {
-                    System.out.println("Invalid username or login");
                 }
+            }
+            if (failedLogin) {
+                System.out.println("Invalid username or login");
             }
         } else{
             String lineToEdit = username + " " + password;
