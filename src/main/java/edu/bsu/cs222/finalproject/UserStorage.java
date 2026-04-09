@@ -2,20 +2,20 @@ package edu.bsu.cs222.finalproject;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserStorage {
 
     private ArrayList<User> users = new ArrayList<>();
     private User activeUser;
 
-    // File where users are stored
     private final File file = new File("users.txt");
 
     public UserStorage() {
-        loadUsers(); // Load users on startup
+        loadUsers();
     }
 
-    // SAFELY load users from file
     private void loadUsers() {
         if (!file.exists()) return;
 
@@ -24,26 +24,45 @@ public class UserStorage {
 
             while ((line = reader.readLine()) != null) {
 
-                // Skip empty or whitespace-only lines
                 if (line.trim().isEmpty()) continue;
 
-                // Split on ANY whitespace (fixes multiple spaces)
-                String[] parts = line.trim().split("\\s+");
+                // Keep quoted strings together (e.g., "Brown Stew Chicken|52846")
+                ArrayList<String> parts = new ArrayList<>();
+                Matcher m = Pattern.compile("\"([^\"]*)\"|(\\S+)").matcher(line);
 
-                // Must have at least username + password
-                if (parts.length < 2) {
-                    System.out.println("Skipping invalid user line: " + line);
-                    continue;
+                while (m.find()) {
+                    if (m.group(1) != null) parts.add(m.group(1)); // quoted
+                    else parts.add(m.group(2)); // normal
                 }
 
-                String username = parts[0];
-                String password = parts[1];
+                if (parts.size() < 2) continue;
+
+                String username = parts.get(0);
+                String password = parts.get(1);
 
                 User user = new User(username, password);
 
-                // Load saved recipes if present
-                for (int i = 2; i < parts.length; i++) {
-                    user.addRecipe(parts[i]);
+                // Load saved recipes (handles both old merged and new clean format)
+                if (parts.size() > 2) {
+                    for (int i = 2; i < parts.size(); i++) {
+                        String merged = parts.get(i).trim();
+                        if (merged.isEmpty()) continue;
+
+                        // Split on capital-letter boundaries to recover multiple recipes
+                        String[] recipes = merged.split(" (?=[A-Z])");
+
+                        for (String recipe : recipes) {
+                            recipe = recipe.trim();
+                            if (recipe.isEmpty()) continue;
+
+                            // If already has an ID, keep it; otherwise add UNKNOWN
+                            if (recipe.contains("|")) {
+                                user.addRecipe(recipe);
+                            } else {
+                                user.addRecipe(recipe + "|UNKNOWN");
+                            }
+                        }
+                    }
                 }
 
                 users.add(user);
@@ -52,18 +71,19 @@ public class UserStorage {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // Rewrite file in clean new format after repairing
+        saveUsers();
     }
 
-    // Save all users back to file
     private void saveUsers() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 
             for (User user : users) {
                 writer.write(user.getUsername() + " " + user.getPassword());
 
-                // Write saved recipes
                 for (String recipe : user.getSavedRecipes()) {
-                    writer.write(" " + recipe);
+                    writer.write(" \"" + recipe + "\"");
                 }
 
                 writer.newLine();
@@ -74,7 +94,6 @@ public class UserStorage {
         }
     }
 
-    // Create a new account
     public boolean createAccount(String username, String password) {
         if (userExists(username)) return false;
 
@@ -84,7 +103,6 @@ public class UserStorage {
         return true;
     }
 
-    // Login and set active user
     public boolean login(String username, String password) {
         for (User user : users) {
             if (user.getUsername().equals(username) &&
@@ -97,7 +115,14 @@ public class UserStorage {
         return false;
     }
 
-    // Save a recipe for the logged-in user
+    public void logout() {
+        activeUser = null;
+    }
+
+    public void saveUsersFromOutside() {
+        saveUsers();
+    }
+
     public void saveRecipe(String recipeName) {
         if (activeUser == null) return;
 
@@ -105,12 +130,10 @@ public class UserStorage {
         saveUsers();
     }
 
-    // Check if username already exists
     public boolean userExists(String username) {
         return users.stream().anyMatch(u -> u.getUsername().equals(username));
     }
 
-    // Get the currently logged-in user
     public User getActiveUser() {
         return activeUser;
     }

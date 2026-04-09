@@ -16,13 +16,12 @@ public class RecipeAppSkeleton extends Application {
     @Override
     public void start(Stage stage) {
 
-        storage = new UserStorage(); // Load users from file
+        storage = new UserStorage();
 
-        // Show login screen first
         LoginScreen loginScreen = new LoginScreen(storage);
 
         VBox loginLayout = loginScreen.getView(stage, () -> {
-            showRecipeFinder(stage); // Switch to recipe finder after login
+            showRecipeFinder(stage);
         });
 
         Scene loginScene = new Scene(loginLayout, 300, 200);
@@ -32,17 +31,23 @@ public class RecipeAppSkeleton extends Application {
         stage.show();
     }
 
-    // Updated Recipe Finder with Save + View Saved Recipes
     private void showRecipeFinder(Stage stage) {
 
         Label title = new Label("Recipe Finder");
+
+        Button logoutButton = new Button("Logout");
+        logoutButton.setOnAction(e -> {
+            storage.logout();
+            LoginScreen loginScreen = new LoginScreen(storage);
+            VBox loginLayout = loginScreen.getView(stage, () -> showRecipeFinder(stage));
+            stage.setScene(new Scene(loginLayout, 300, 200));
+        });
 
         TextField searchField = new TextField();
         searchField.setPromptText("Search for an ingredient");
 
         Button searchButton = new Button("Search");
 
-        // NEW BUTTONS
         Button saveButton = new Button("Save Recipe");
         saveButton.setDisable(true);
 
@@ -50,7 +55,6 @@ public class RecipeAppSkeleton extends Application {
 
         ListView<String> resultsList = new ListView<>();
 
-        // SEARCH LOGIC
         searchButton.setOnAction(e -> {
             String ingredient = searchField.getText().trim();
 
@@ -85,12 +89,9 @@ public class RecipeAppSkeleton extends Application {
             }).start();
         });
 
-        // CLICK RECIPE → LOAD DETAILS + ENABLE SAVE BUTTON
         resultsList.setOnMouseClicked(event -> {
             String selected = resultsList.getSelectionModel().getSelectedItem();
-            if (selected == null || !selected.contains("ID:")) {
-                return;
-            }
+            if (selected == null || !selected.contains("ID:")) return;
 
             String id = selected.substring(selected.indexOf("ID:") + 4, selected.indexOf(")"));
             String mealName = selected.substring(0, selected.indexOf(" (ID:"));
@@ -108,12 +109,10 @@ public class RecipeAppSkeleton extends Application {
                     javafx.application.Platform.runLater(() -> {
                         resultsList.getItems().setAll(details);
 
-                        // ENABLE SAVE BUTTON
                         saveButton.setDisable(false);
 
-                        // SAVE RECIPE FOR ACTIVE USER
                         saveButton.setOnAction(ev -> {
-                            storage.saveRecipe(mealName);
+                            storage.saveRecipe(mealName + "|" + id);
                         });
                     });
 
@@ -125,13 +124,12 @@ public class RecipeAppSkeleton extends Application {
             }).start();
         });
 
-        // NEW: VIEW SAVED RECIPES BUTTON
         viewSavedButton.setOnAction(e -> {
             SavedRecipesScreen screen = new SavedRecipesScreen(storage);
             stage.setScene(screen.getScene(stage, () -> showRecipeFinder(stage)));
         });
 
-        VBox layout = new VBox(10, title, searchField, searchButton, saveButton, viewSavedButton, resultsList);
+        VBox layout = new VBox(10, title, logoutButton, searchField, searchButton, saveButton, viewSavedButton, resultsList);
 
         Scene scene = new Scene(layout, 400, 550);
 
