@@ -25,13 +25,13 @@ public class SavedRecipesScreen {
 
         ListView<String> list = new ListView<>();
 
-        // Show only recipe names
+        // Show only the recipe names (before the |)
         for (String entry : user.getSavedRecipes()) {
             String name = entry.split("\\|")[0];
             list.getItems().add(name);
         }
 
-        // VIEW DETAILS ON CLICK
+        // Click to load full recipe details
         list.setOnMouseClicked(e -> {
             String selectedName = list.getSelectionModel().getSelectedItem();
             if (selectedName == null) return;
@@ -76,26 +76,19 @@ public class SavedRecipesScreen {
             }).start();
         });
 
-        // DELETE BUTTON
         Button deleteButton = new Button("Delete Selected Recipe");
         deleteButton.setOnAction(e -> {
             String selectedName = list.getSelectionModel().getSelectedItem();
             if (selectedName == null) return;
 
-            // Find full entry (name|id)
             String full = user.getSavedRecipes().stream()
                     .filter(s -> s.startsWith(selectedName + "|"))
                     .findFirst().orElse(null);
 
             if (full == null) return;
 
-            // Remove from user
             user.getSavedRecipes().remove(full);
-
-            // Update file
             storage.saveUsersFromOutside();
-
-            // Update UI
             list.getItems().remove(selectedName);
         });
 

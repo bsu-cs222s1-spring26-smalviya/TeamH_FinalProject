@@ -4,9 +4,11 @@ import edu.bsu.cs222.finalproject.JsonDataParser;
 import edu.bsu.cs222.finalproject.RecipeGrabber;
 import edu.bsu.cs222.finalproject.UserStorage;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class RecipeAppSkeleton extends Application {
@@ -20,9 +22,7 @@ public class RecipeAppSkeleton extends Application {
 
         LoginScreen loginScreen = new LoginScreen(storage);
 
-        VBox loginLayout = loginScreen.getView(stage, () -> {
-            showRecipeFinder(stage);
-        });
+        VBox loginLayout = loginScreen.getView(stage, () -> showRecipeFinder(stage));
 
         Scene loginScene = new Scene(loginLayout, 300, 200);
 
@@ -55,6 +55,7 @@ public class RecipeAppSkeleton extends Application {
 
         ListView<String> resultsList = new ListView<>();
 
+        // SEARCH HANDLER
         searchButton.setOnAction(e -> {
             String ingredient = searchField.getText().trim();
 
@@ -73,7 +74,7 @@ public class RecipeAppSkeleton extends Application {
                     JsonDataParser parser = new JsonDataParser();
                     String[] meals = parser.parseMealNamesAndIds(json);
 
-                    javafx.application.Platform.runLater(() -> {
+                    Platform.runLater(() -> {
                         if (meals.length == 0) {
                             resultsList.getItems().setAll("No recipes found.");
                         } else {
@@ -82,21 +83,27 @@ public class RecipeAppSkeleton extends Application {
                     });
 
                 } catch (Exception ex) {
-                    javafx.application.Platform.runLater(() ->
+                    Platform.runLater(() ->
                             resultsList.getItems().setAll("Error fetching recipes.")
                     );
                 }
             }).start();
         });
 
+        // CLICK HANDLER — FIXED + FORMATTED
         resultsList.setOnMouseClicked(event -> {
             String selected = resultsList.getSelectionModel().getSelectedItem();
-            if (selected == null || !selected.contains("ID:")) return;
+            if (selected == null || !selected.contains("(ID:")) return;
 
-            String id = selected.substring(selected.indexOf("ID:") + 4, selected.indexOf(")"));
-            String mealName = selected.substring(0, selected.indexOf(" (ID:"));
+            int idStart = selected.lastIndexOf("(ID:") + 4;
+            int idEnd = selected.indexOf(")", idStart);
 
-            resultsList.getItems().setAll("Loading recipe...");
+            if (idStart < 4 || idEnd == -1) return;
+
+            String id = selected.substring(idStart, idEnd).trim();
+            String mealName = selected.substring(0, selected.lastIndexOf(" (ID:"));
+
+            resultsList.getItems().setAll("Loading recipe details...");
 
             new Thread(() -> {
                 try {
@@ -106,18 +113,17 @@ public class RecipeAppSkeleton extends Application {
                     JsonDataParser parser = new JsonDataParser();
                     String details = parser.parseMealDetails(json);
 
-                    javafx.application.Platform.runLater(() -> {
-                        resultsList.getItems().setAll(details);
+                    Platform.runLater(() -> {
+                        resultsList.getItems().setAll(details.split("\n"));
 
                         saveButton.setDisable(false);
-
                         saveButton.setOnAction(ev -> {
                             storage.saveRecipe(mealName + "|" + id);
                         });
                     });
 
                 } catch (Exception ex) {
-                    javafx.application.Platform.runLater(() ->
+                    Platform.runLater(() ->
                             resultsList.getItems().setAll("Error loading recipe details.")
                     );
                 }
@@ -129,9 +135,20 @@ public class RecipeAppSkeleton extends Application {
             stage.setScene(screen.getScene(stage, () -> showRecipeFinder(stage)));
         });
 
-        VBox layout = new VBox(10, title, logoutButton, searchField, searchButton, saveButton, viewSavedButton, resultsList);
+        VBox layout = new VBox(
+                10,
+                title,
+                logoutButton,
+                searchField,
+                searchButton,
+                saveButton,
+                viewSavedButton,
+                resultsList
+        );
 
-        Scene scene = new Scene(layout, 400, 550);
+        layout.setPadding(new Insets(10));
+
+        Scene scene = new Scene(layout, 450, 600);
 
         stage.setScene(scene);
         stage.setTitle("Recipe Finder");

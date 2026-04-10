@@ -1,37 +1,56 @@
 package edu.bsu.cs222.finalproject;
 
-import com.jayway.jsonpath.JsonPath;
-import java.util.List;
+import com.github.openjson.JSONArray;
+import com.github.openjson.JSONObject;
 
 public class JsonDataParser {
 
-    // MAJOR FEATURE: now returns "Meal Name (ID: ####)"
-    public String[] parseMealNamesAndIds(String jsonData) {
-        try {
-            List<String> names = JsonPath.read(jsonData, "$.meals[*].strMeal");
-            List<String> ids = JsonPath.read(jsonData, "$.meals[*].idMeal");
+    public String[] parseMealNamesAndIds(String json) {
+        JSONObject obj = new JSONObject(json);
 
-            String[] result = new String[names.size()];
-            for (int i = 0; i < names.size(); i++) {
-                result[i] = names.get(i) + " (ID: " + ids.get(i) + ")";
-            }
-            return result;
-
-        } catch (Exception e) {
+        if (obj.isNull("meals")) {
             return new String[0];
         }
+
+        JSONArray arr = obj.getJSONArray("meals");
+        String[] results = new String[arr.length()];
+
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject meal = arr.getJSONObject(i);
+            String name = meal.getString("strMeal");
+            String id = meal.getString("idMeal");
+            results[i] = name + " (ID: " + id + ")";
+        }
+
+        return results;
     }
 
-    // MAJOR FEATURE: full recipe details (name + instructions)
-    public String parseMealDetails(String jsonData) {
-        try {
-            String name = JsonPath.read(jsonData, "$.meals[0].strMeal");
-            String instructions = JsonPath.read(jsonData, "$.meals[0].strInstructions");
+    public String parseMealDetails(String json) {
+        JSONObject obj = new JSONObject(json);
 
-            return name + "\n\nInstructions:\n" + instructions;
-
-        } catch (Exception e) {
-            return "Error parsing recipe details.";
+        if (obj.isNull("meals")) {
+            return "No details found.";
         }
+
+        JSONObject meal = obj.getJSONArray("meals").getJSONObject(0);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Name: ").append(meal.getString("strMeal")).append("\n\n");
+        sb.append("Category: ").append(meal.optString("strCategory", "Unknown")).append("\n");
+        sb.append("Area: ").append(meal.optString("strArea", "Unknown")).append("\n\n");
+        sb.append("Instructions:\n").append(meal.getString("strInstructions")).append("\n\n");
+        sb.append("Ingredients:\n");
+
+        for (int i = 1; i <= 20; i++) {
+            String ingredient = meal.optString("strIngredient" + i, "");
+            String measure = meal.optString("strMeasure" + i, "");
+
+            if (ingredient != null && !ingredient.isBlank()) {
+                sb.append("- ").append(ingredient).append(" : ").append(measure).append("\n");
+            }
+        }
+
+        return sb.toString();
     }
 }

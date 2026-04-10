@@ -19,10 +19,10 @@ dependencies {
     implementation("org.openjfx:javafx-controls:$javafxVersion:win")
     implementation("org.openjfx:javafx-fxml:$javafxVersion:win")
 
-    // JSON parsing
+    // JSON parsing (these 3 work together)
     implementation("com.jayway.jsonpath:json-path:2.9.0")
-    implementation("net.minidev:json-smart:2.4.10")   // <-- REQUIRED for JSONArray
-    implementation("com.github.openjson:openjson:1.0.12")
+    implementation("net.minidev:json-smart:2.4.10")   // REQUIRED by JsonPath
+    implementation("com.github.openjson:openjson:1.0.12") // Your JSON object parser
 
     // MealDB wrapper (optional)
     implementation("io.github.thexxiv:mealdb:1.0.0")

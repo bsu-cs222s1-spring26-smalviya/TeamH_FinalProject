@@ -26,13 +26,13 @@ public class UserStorage {
 
                 if (line.trim().isEmpty()) continue;
 
-                // Keep quoted strings together (e.g., "Brown Stew Chicken|52846")
+                // Keep quoted strings together
                 ArrayList<String> parts = new ArrayList<>();
                 Matcher m = Pattern.compile("\"([^\"]*)\"|(\\S+)").matcher(line);
 
                 while (m.find()) {
-                    if (m.group(1) != null) parts.add(m.group(1)); // quoted
-                    else parts.add(m.group(2)); // normal
+                    if (m.group(1) != null) parts.add(m.group(1));
+                    else parts.add(m.group(2));
                 }
 
                 if (parts.size() < 2) continue;
@@ -42,20 +42,39 @@ public class UserStorage {
 
                 User user = new User(username, password);
 
-                // Load saved recipes (handles both old merged and new clean format)
+                // Load saved recipes
                 if (parts.size() > 2) {
                     for (int i = 2; i < parts.size(); i++) {
                         String merged = parts.get(i).trim();
                         if (merged.isEmpty()) continue;
 
-                        // Split on capital-letter boundaries to recover multiple recipes
-                        String[] recipes = merged.split(" (?=[A-Z])");
+                        ArrayList<String> recipes = new ArrayList<>();
+                        StringBuilder current = new StringBuilder();
+
+                        int depth = 0;
+
+                        for (int j = 0; j < merged.length(); j++) {
+                            char c = merged.charAt(j);
+
+                            if (c == '(') depth++;
+                            if (c == ')') depth--;
+
+                            if (c == ' ' && depth == 0 &&
+                                    j + 1 < merged.length() &&
+                                    Character.isUpperCase(merged.charAt(j + 1))) {
+
+                                recipes.add(current.toString().trim());
+                                current.setLength(0);
+                            } else {
+                                current.append(c);
+                            }
+                        }
+
+                        if (current.length() > 0) {
+                            recipes.add(current.toString().trim());
+                        }
 
                         for (String recipe : recipes) {
-                            recipe = recipe.trim();
-                            if (recipe.isEmpty()) continue;
-
-                            // If already has an ID, keep it; otherwise add UNKNOWN
                             if (recipe.contains("|")) {
                                 user.addRecipe(recipe);
                             } else {
@@ -72,7 +91,6 @@ public class UserStorage {
             e.printStackTrace();
         }
 
-        // Rewrite file in clean new format after repairing
         saveUsers();
     }
 
@@ -92,6 +110,10 @@ public class UserStorage {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void saveUsersFromOutside() {
+        saveUsers();
     }
 
     public boolean createAccount(String username, String password) {
@@ -117,10 +139,6 @@ public class UserStorage {
 
     public void logout() {
         activeUser = null;
-    }
-
-    public void saveUsersFromOutside() {
-        saveUsers();
     }
 
     public void saveRecipe(String recipeName) {
