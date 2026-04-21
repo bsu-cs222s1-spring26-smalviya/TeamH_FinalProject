@@ -3,7 +3,6 @@ package UI;
 import edu.bsu.cs222.finalproject.UserStorage;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 public class LoginScreen {
 
@@ -13,46 +12,109 @@ public class LoginScreen {
         this.storage = storage;
     }
 
-    public VBox getView(Stage stage, Runnable onLoginSuccess) {
+    public VBox getView(Runnable onLoginSuccess) {
+        TextField usernameField = buildUsernameField();
+        PasswordField passwordField = buildPasswordField();
+        Label messageLabel = new Label();
 
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
+        Button loginButton = buildLoginButton(usernameField, passwordField, messageLabel, onLoginSuccess);
+        Button createAccountButton = buildCreateAccountButton(usernameField, passwordField, messageLabel);
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
+        return assembleLayout(usernameField, passwordField, loginButton, createAccountButton, messageLabel);
+    }
 
+    // UI Builders
+
+    private TextField buildUsernameField() {
+        TextField field = new TextField();
+        field.setPromptText("Username");
+        return field;
+    }
+
+    private PasswordField buildPasswordField() {
+        PasswordField field = new PasswordField();
+        field.setPromptText("Password");
+        return field;
+    }
+
+    private Button buildLoginButton(
+            TextField usernameField,
+            PasswordField passwordField,
+            Label messageLabel,
+            Runnable onLoginSuccess
+    ) {
         Button loginButton = new Button("Login");
+        loginButton.setOnAction(event ->
+                handleLogin(usernameField, passwordField, messageLabel, onLoginSuccess)
+        );
+        return loginButton;
+    }
+
+    private Button buildCreateAccountButton(
+            TextField usernameField,
+            PasswordField passwordField,
+            Label messageLabel
+    ) {
         Button createButton = new Button("Create Account");
+        createButton.setOnAction(event ->
+                handleAccountCreation(usernameField, passwordField, messageLabel)
+        );
+        return createButton;
+    }
 
-        Label message = new Label();
+    private VBox assembleLayout(
+            TextField usernameField,
+            PasswordField passwordField,
+            Button loginButton,
+            Button createAccountButton,
+            Label messageLabel
+    ) {
+        return new VBox(
+                10,
+                usernameField,
+                passwordField,
+                loginButton,
+                createAccountButton,
+                messageLabel
+        );
+    }
 
-        loginButton.setOnAction(e -> {
-            boolean success = storage.login(
-                    usernameField.getText(),
-                    passwordField.getText()
-            );
+    // Event Handlers
 
-            if (success) {
-                message.setText("Login successful!");
-                onLoginSuccess.run(); // SWITCH TO RECIPE FINDER
-            } else {
-                message.setText("Invalid username or password");
-            }
-        });
+    private void handleLogin(
+            TextField usernameField,
+            PasswordField passwordField,
+            Label messageLabel,
+            Runnable onLoginSuccess
+    ) {
+        boolean loginSuccessful = storage.login(
+                usernameField.getText(),
+                passwordField.getText()
+        );
 
-        createButton.setOnAction(e -> {
-            boolean created = storage.createAccount(
-                    usernameField.getText(),
-                    passwordField.getText()
-            );
+        if (loginSuccessful) {
+            messageLabel.setText("Login successful!");
+            onLoginSuccess.run();
+        } else {
+            messageLabel.setText("Invalid username or password");
+        }
+    }
 
-            if (created) {
-                message.setText("Account created! You can now log in.");
-            } else {
-                message.setText("Username already exists");
-            }
-        });
+    private void handleAccountCreation(
+            TextField usernameField,
+            PasswordField passwordField,
+            Label messageLabel
+    ) {
+        boolean accountCreated = storage.createAccount(
+                usernameField.getText(),
+                passwordField.getText()
+        );
 
-        return new VBox(10, usernameField, passwordField, loginButton, createButton, message);
+        if (accountCreated) {
+            messageLabel.setText("Account created! You can now log in.");
+        } else {
+            messageLabel.setText("Username already exists");
+        }
     }
 }
+

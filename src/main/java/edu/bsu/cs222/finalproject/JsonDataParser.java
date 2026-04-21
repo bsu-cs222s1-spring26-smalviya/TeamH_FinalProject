@@ -6,51 +6,92 @@ import com.github.openjson.JSONObject;
 public class JsonDataParser {
 
     public String[] parseMealNamesAndIds(String json) {
-        JSONObject obj = new JSONObject(json);
+        try {
+            JSONObject root = new JSONObject(json);
 
-        if (obj.isNull("meals")) {
+            if (!root.has("meals") || root.isNull("meals")) {
+                return new String[0];
+            }
+
+            JSONArray meals = root.getJSONArray("meals");
+            String[] results = new String[meals.length()];
+
+            for (int i = 0; i < meals.length(); i++) {
+                JSONObject meal = meals.getJSONObject(i);
+
+                String name = meal.optString("strMeal", "Unknown Meal");
+                String id = meal.optString("idMeal", "UNKNOWN");
+
+                results[i] = name + " (ID: " + id + ")";
+            }
+
+            return results;
+
+        } catch (Exception e) {
+            System.out.println("Error parsing meal names: " + e.getMessage());
             return new String[0];
         }
-
-        JSONArray arr = obj.getJSONArray("meals");
-        String[] results = new String[arr.length()];
-
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject meal = arr.getJSONObject(i);
-            String name = meal.getString("strMeal");
-            String id = meal.getString("idMeal");
-            results[i] = name + " (ID: " + id + ")";
-        }
-
-        return results;
     }
 
     public String parseMealDetails(String json) {
-        JSONObject obj = new JSONObject(json);
+        try {
+            JSONObject root = new JSONObject(json);
 
-        if (obj.isNull("meals")) {
-            return "No details found.";
-        }
-
-        JSONObject meal = obj.getJSONArray("meals").getJSONObject(0);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Name: ").append(meal.getString("strMeal")).append("\n\n");
-        sb.append("Category: ").append(meal.optString("strCategory", "Unknown")).append("\n");
-        sb.append("Area: ").append(meal.optString("strArea", "Unknown")).append("\n\n");
-        sb.append("Instructions:\n").append(meal.getString("strInstructions")).append("\n\n");
-        sb.append("Ingredients:\n");
-
-        for (int i = 1; i <= 20; i++) {
-            String ingredient = meal.optString("strIngredient" + i, "");
-            String measure = meal.optString("strMeasure" + i, "");
-
-            if (ingredient != null && !ingredient.isBlank()) {
-                sb.append("- ").append(ingredient).append(" : ").append(measure).append("\n");
+            if (!root.has("meals") || root.isNull("meals")) {
+                return "No details available.";
             }
+
+            JSONArray meals = root.getJSONArray("meals");
+            JSONObject meal = meals.getJSONObject(0);
+
+            StringBuilder sb = new StringBuilder();
+
+            String name = meal.optString("strMeal", "Unknown Meal");
+            String category = meal.optString("strCategory", "Unknown Category");
+            String area = meal.optString("strArea", "Unknown Area");
+            String instructions = meal.optString("strInstructions", "No instructions available.");
+
+            sb.append("Name: ").append(name).append("\n");
+            sb.append("Category: ").append(category).append("\n");
+            sb.append("Area: ").append(area).append("\n\n");
+            sb.append("Instructions:\n").append(instructions).append("\n\n");
+            sb.append("Ingredients:\n");
+
+            for (int i = 1; i <= 20; i++) {
+                String ingredient = meal.optString("strIngredient" + i, "").trim();
+                String measure = meal.optString("strMeasure" + i, "").trim();
+
+                if (!ingredient.isEmpty()) {
+                    sb.append("- ").append(ingredient);
+                    if (!measure.isEmpty()) sb.append(" (").append(measure).append(")");
+                    sb.append("\n");
+                }
+            }
+
+            return sb.toString();
+
+        } catch (Exception e) {
+            System.out.println("Error parsing meal details: " + e.getMessage());
+            return "Error loading recipe details.";
+        }
+    }
+
+    public String highlightAllergensInText(String text, String[] allergies) {
+        if (text == null || allergies == null) return text;
+
+        String result = text;
+
+        try {
+            for (String allergy : allergies) {
+                if (allergy == null || allergy.isBlank()) continue;
+
+                String lower = allergy.toLowerCase();
+                result = result.replaceAll("(?i)" + lower, "[RED]" + allergy + "[/RED]");
+            }
+        } catch (Exception e) {
+            System.out.println("Error highlighting allergens: " + e.getMessage());
         }
 
-        return sb.toString();
+        return result;
     }
 }
