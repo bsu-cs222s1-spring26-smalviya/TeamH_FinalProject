@@ -11,6 +11,7 @@ Dwight Williams,
 Griffin B Roach,
 
 Requirements:
+
 Java 17 or higher
 
 Gradle (wrapper included)
@@ -18,6 +19,7 @@ Gradle (wrapper included)
 Internet connection (for API calls)
 
 Notes:
+
 The application uses TheMealDB API; no API key is required.
 
 Saved recipes are stored locally in users.txt.
