@@ -1,33 +1,45 @@
 package edu.bsu.cs222.finalproject;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class RecipeGrabber {
 
-    public String fetchRecipesByIngredient(String ingredient) throws IOException {
-        String encodedIngredient = URLEncoder.encode(ingredient, StandardCharsets.UTF_8);
-        String url = "https://www.themealdb.com/api/json/v1/1/filter.php?i=" + encodedIngredient;
+    private String fetch(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        URLConnection connection = URI.create(url).toURL().openConnection();
+            conn.setRequestMethod("GET");
+            conn.setUseCaches(false);
+            conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+            conn.setRequestProperty("Pragma", "no-cache");
+            conn.setRequestProperty("Expires", "0");
 
-        // MAJOR CHANGE: added User-Agent header to avoid API blocking
-        connection.setRequestProperty("User-Agent", "CS222-FinalProject/1.0");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
 
-        return new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            reader.close();
+            conn.disconnect();
+            return sb.toString();
+
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 
-    // MAJOR FEATURE: fetch full recipe details by ID
-    public String fetchRecipeById(String id) throws IOException {
-        String url = "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id;
+    public String getMealsByIngredient(String ingredient) {
+        return fetch("https://www.themealdb.com/api/json/v1/1/filter.php?i=" + ingredient);
+    }
 
-        URLConnection connection = URI.create(url).toURL().openConnection();
-        connection.setRequestProperty("User-Agent", "CS222-FinalProject/1.0");
-
-        return new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    public String getMealDetails(String id) {
+        return fetch("https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id);
     }
 }
-

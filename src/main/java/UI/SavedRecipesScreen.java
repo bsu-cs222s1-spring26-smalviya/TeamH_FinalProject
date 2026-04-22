@@ -16,7 +16,7 @@ public class SavedRecipesScreen {
 
     public Scene getScene(Stage stage, Runnable onBack) {
         SavedRecipesView view = new SavedRecipesView();
-        new SavedRecipesController(view, storage, allergyList, stage, onBack);
+        new SavedRecipesController(view, storage, new RecipeService(), "");
         return new Scene(view.getRoot(), 450, 600);
     }
 }

@@ -27,7 +27,7 @@ public class User {
     }
 
     public String getSavedRecipesAsString() {
-        return String.join(",", savedRecipes);
+        return String.join(",", savedRecipes) + ",";
     }
 
     public void addRecipe(String recipeLine) {

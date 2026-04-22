@@ -15,7 +15,11 @@ public class UserStorage {
     }
 
     public boolean createAccount(String username, String password) {
-        if (userExists(username)) return false;
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                return false;
+            }
+        }
 
         User newUser = new User(username, password);
         users.add(newUser);
@@ -41,26 +45,24 @@ public class UserStorage {
         return activeUser != null;
     }
 
-    private boolean userExists(String username) {
-        return users.stream().anyMatch(u -> u.getUsername().equals(username));
+    public User getActiveUser() {
+        return activeUser;
     }
 
     public List<String> getSavedRecipes() {
         if (activeUser == null) return new ArrayList<>();
-        return new ArrayList<>(activeUser.getSavedRecipes());
+        return activeUser.getSavedRecipes();
     }
 
-    public void saveRecipe(String recipeLine) {
+    public void addRecipe(String recipeLine) {
         if (activeUser == null) return;
-
-        activeUser.getSavedRecipes().add(recipeLine);
+        activeUser.addRecipe(recipeLine);
         saveUsers();
     }
 
-    public void deleteRecipe(String recipeLine) {
+    public void removeRecipe(String recipeLine) {
         if (activeUser == null) return;
-
-        activeUser.getSavedRecipes().remove(recipeLine);
+        activeUser.removeRecipe(recipeLine);
         saveUsers();
     }
 
@@ -71,7 +73,16 @@ public class UserStorage {
             String line;
 
             while ((line = reader.readLine()) != null) {
+
+                if (line.trim().isEmpty()) continue;
+
                 String[] parts = line.split(";");
+
+                if (parts.length < 2) {
+                    System.out.println("Skipping invalid user line: " + line);
+                    continue;
+                }
+
                 String username = parts[0];
                 String password = parts[1];
 
@@ -81,7 +92,7 @@ public class UserStorage {
                     String[] recipes = parts[2].split(",");
                     for (String r : recipes) {
                         if (!r.isBlank()) {
-                            user.getSavedRecipes().add(r.trim());
+                            user.addRecipe(r.trim());
                         }
                     }
                 }
@@ -97,15 +108,11 @@ public class UserStorage {
     private void saveUsers() {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
             for (User u : users) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(u.getUsername()).append(";")
-                        .append(u.getPassword()).append(";");
-
-                for (String recipe : u.getSavedRecipes()) {
-                    sb.append(recipe).append(",");
-                }
-
-                writer.println(sb);
+                writer.println(
+                        u.getUsername() + ";" +
+                                u.getPassword() + ";" +
+                                u.getSavedRecipesAsString()
+                );
             }
         } catch (IOException e) {
             e.printStackTrace();

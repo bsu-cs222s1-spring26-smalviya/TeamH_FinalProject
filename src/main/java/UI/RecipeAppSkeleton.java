@@ -29,7 +29,7 @@ public class RecipeAppSkeleton extends Application {
         RecipeFinderView view = new RecipeFinderView();
         RecipeService service = new RecipeService();
 
-        new RecipeFinderController(view, service, storage, stage);
+        new RecipeFinderController(view, storage, service, stage);
 
         stage.setScene(new Scene(view.getRoot(), 450, 600));
         stage.setTitle("Recipe Finder");
