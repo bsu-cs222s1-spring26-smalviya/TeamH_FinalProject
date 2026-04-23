@@ -2,18 +2,68 @@ package edu.bsu.cs222.finalproject;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 public class UserStorage {
 
-    private ArrayList<User> users = new ArrayList<>();
-    private User activeUser;
-
     private final File file = new File("users.txt");
+    private final List<User> users = new ArrayList<>();
+    private User activeUser;
 
     public UserStorage() {
         loadUsers();
+    }
+
+    public boolean createAccount(String username, String password) {
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                return false;
+            }
+        }
+
+        User newUser = new User(username, password);
+        users.add(newUser);
+        saveUsers();
+        return true;
+    }
+
+    public boolean login(String username, String password) {
+        for (User u : users) {
+            if (u.getUsername().equals(username) && u.getPassword().equals(password)) {
+                activeUser = u;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void logout() {
+        activeUser = null;
+    }
+
+    public boolean isLoggedIn() {
+        return activeUser != null;
+    }
+
+    public User getActiveUser() {
+        return activeUser;
+    }
+
+    public List<String> getSavedRecipes() {
+        if (activeUser == null) return new ArrayList<>();
+        return activeUser.getSavedRecipes();
+    }
+
+    public void addRecipe(String recipeLine) {
+        if (activeUser == null) return;
+        activeUser.addRecipe(recipeLine);
+        saveUsers();
+    }
+
+    public void removeRecipe(String recipeLine) {
+        if (activeUser == null) return;
+        activeUser.removeRecipe(recipeLine);
+        saveUsers();
     }
 
     private void loadUsers() {
@@ -26,60 +76,23 @@ public class UserStorage {
 
                 if (line.trim().isEmpty()) continue;
 
-                // Keep quoted strings together
-                ArrayList<String> parts = new ArrayList<>();
-                Matcher m = Pattern.compile("\"([^\"]*)\"|(\\S+)").matcher(line);
+                String[] parts = line.split(";");
 
-                while (m.find()) {
-                    if (m.group(1) != null) parts.add(m.group(1));
-                    else parts.add(m.group(2));
+                if (parts.length < 2) {
+                    System.out.println("Skipping invalid user line: " + line);
+                    continue;
                 }
 
-                if (parts.size() < 2) continue;
-
-                String username = parts.get(0);
-                String password = parts.get(1);
+                String username = parts[0];
+                String password = parts[1];
 
                 User user = new User(username, password);
 
-                // Load saved recipes
-                if (parts.size() > 2) {
-                    for (int i = 2; i < parts.size(); i++) {
-                        String merged = parts.get(i).trim();
-                        if (merged.isEmpty()) continue;
-
-                        ArrayList<String> recipes = new ArrayList<>();
-                        StringBuilder current = new StringBuilder();
-
-                        int depth = 0;
-
-                        for (int j = 0; j < merged.length(); j++) {
-                            char c = merged.charAt(j);
-
-                            if (c == '(') depth++;
-                            if (c == ')') depth--;
-
-                            if (c == ' ' && depth == 0 &&
-                                    j + 1 < merged.length() &&
-                                    Character.isUpperCase(merged.charAt(j + 1))) {
-
-                                recipes.add(current.toString().trim());
-                                current.setLength(0);
-                            } else {
-                                current.append(c);
-                            }
-                        }
-
-                        if (current.length() > 0) {
-                            recipes.add(current.toString().trim());
-                        }
-
-                        for (String recipe : recipes) {
-                            if (recipe.contains("|")) {
-                                user.addRecipe(recipe);
-                            } else {
-                                user.addRecipe(recipe + "|UNKNOWN");
-                            }
+                if (parts.length > 2) {
+                    String[] recipes = parts[2].split(",");
+                    for (String r : recipes) {
+                        if (!r.isBlank()) {
+                            user.addRecipe(r.trim());
                         }
                     }
                 }
@@ -90,69 +103,19 @@ public class UserStorage {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        saveUsers();
     }
 
     private void saveUsers() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-
-            for (User user : users) {
-                writer.write(user.getUsername() + " " + user.getPassword());
-
-                for (String recipe : user.getSavedRecipes()) {
-                    writer.write(" \"" + recipe + "\"");
-                }
-
-                writer.newLine();
+        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+            for (User u : users) {
+                writer.println(
+                        u.getUsername() + ";" +
+                                u.getPassword() + ";" +
+                                u.getSavedRecipesAsString()
+                );
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public void saveUsersFromOutside() {
-        saveUsers();
-    }
-
-    public boolean createAccount(String username, String password) {
-        if (userExists(username)) return false;
-
-        User user = new User(username, password);
-        users.add(user);
-        saveUsers();
-        return true;
-    }
-
-    public boolean login(String username, String password) {
-        for (User user : users) {
-            if (user.getUsername().equals(username) &&
-                    user.getPassword().equals(password)) {
-
-                activeUser = user;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void logout() {
-        activeUser = null;
-    }
-
-    public void saveRecipe(String recipeName) {
-        if (activeUser == null) return;
-
-        activeUser.addRecipe(recipeName);
-        saveUsers();
-    }
-
-    public boolean userExists(String username) {
-        return users.stream().anyMatch(u -> u.getUsername().equals(username));
-    }
-
-    public User getActiveUser() {
-        return activeUser;
     }
 }

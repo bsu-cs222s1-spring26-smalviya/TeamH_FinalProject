@@ -1,23 +1,17 @@
 package edu.bsu.cs222.finalproject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
-    private String username;
-    private String password;
-    private ArrayList<String> savedRecipes;
+    private final String username;
+    private final String password;
+    private final List<String> savedRecipes = new ArrayList<>();
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
-
-        // MAJOR FIX: savedRecipes was never initialized → caused NullPointerException
-        this.savedRecipes = new ArrayList<>();
-    }
-
-    public void addRecipe(String recipeName) {
-        savedRecipes.add(recipeName);
     }
 
     public String getUsername() {
@@ -28,15 +22,19 @@ public class User {
         return password;
     }
 
-    public ArrayList<String> getSavedRecipes() {
-        return savedRecipes;
+    public List<String> getSavedRecipes() {
+        return new ArrayList<>(savedRecipes);
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getSavedRecipesAsString() {
+        return String.join(",", savedRecipes) + ",";
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void addRecipe(String recipeLine) {
+        savedRecipes.add(recipeLine);
+    }
+
+    public void removeRecipe(String recipeLine) {
+        savedRecipes.remove(recipeLine);
     }
 }

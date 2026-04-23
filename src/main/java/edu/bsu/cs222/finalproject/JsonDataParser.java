@@ -6,51 +6,82 @@ import com.github.openjson.JSONObject;
 public class JsonDataParser {
 
     public String[] parseMealNamesAndIds(String json) {
-        JSONObject obj = new JSONObject(json);
+        try {
+            JSONObject root = new JSONObject(json);
 
-        if (obj.isNull("meals")) {
+            if (!root.has("meals") || root.isNull("meals")) {
+                return new String[0];
+            }
+
+            JSONArray meals = root.getJSONArray("meals");
+            String[] results = new String[meals.length()];
+
+            for (int i = 0; i < meals.length(); i++) {
+                JSONObject meal = meals.getJSONObject(i);
+
+                String name = meal.optString("strMeal", "Unknown Meal");
+                String id = meal.optString("idMeal", "UNKNOWN");
+
+                results[i] = name + " | " + id;
+            }
+
+            return results;
+
+        } catch (Exception e) {
             return new String[0];
         }
-
-        JSONArray arr = obj.getJSONArray("meals");
-        String[] results = new String[arr.length()];
-
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject meal = arr.getJSONObject(i);
-            String name = meal.getString("strMeal");
-            String id = meal.getString("idMeal");
-            results[i] = name + " (ID: " + id + ")";
-        }
-
-        return results;
     }
 
     public String parseMealDetails(String json) {
-        JSONObject obj = new JSONObject(json);
+        try {
+            JSONObject root = new JSONObject(json);
 
-        if (obj.isNull("meals")) {
-            return "No details found.";
-        }
-
-        JSONObject meal = obj.getJSONArray("meals").getJSONObject(0);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Name: ").append(meal.getString("strMeal")).append("\n\n");
-        sb.append("Category: ").append(meal.optString("strCategory", "Unknown")).append("\n");
-        sb.append("Area: ").append(meal.optString("strArea", "Unknown")).append("\n\n");
-        sb.append("Instructions:\n").append(meal.getString("strInstructions")).append("\n\n");
-        sb.append("Ingredients:\n");
-
-        for (int i = 1; i <= 20; i++) {
-            String ingredient = meal.optString("strIngredient" + i, "");
-            String measure = meal.optString("strMeasure" + i, "");
-
-            if (ingredient != null && !ingredient.isBlank()) {
-                sb.append("- ").append(ingredient).append(" : ").append(measure).append("\n");
+            if (!root.has("meals") || root.isNull("meals")) {
+                return "No details available.";
             }
+
+            JSONObject meal = root.getJSONArray("meals").getJSONObject(0);
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("Name: ").append(meal.optString("strMeal")).append("\n");
+            sb.append("Category: ").append(meal.optString("strCategory")).append("\n");
+            sb.append("Area: ").append(meal.optString("strArea")).append("\n\n");
+
+            sb.append("Instructions:\n")
+                    .append(meal.optString("strInstructions"))
+                    .append("\n\nIngredients:\n");
+
+            for (int i = 1; i <= 20; i++) {
+                String ing = meal.optString("strIngredient" + i, "").trim();
+                String meas = meal.optString("strMeasure" + i, "").trim();
+
+                if (!ing.isEmpty()) {
+                    sb.append("- ").append(ing);
+                    if (!meas.isEmpty()) sb.append(" (").append(meas).append(")");
+                    sb.append("\n");
+                }
+            }
+
+            return sb.toString();
+
+        } catch (Exception e) {
+            return "Error loading recipe details.";
+        }
+    }
+
+    public String highlightAllergens(String text, String[] allergies) {
+        if (text == null || allergies == null) return text;
+
+        String result = text;
+
+        for (String allergy : allergies) {
+            if (allergy == null || allergy.isBlank()) continue;
+
+            String pattern = "(?i)" + allergy.trim();
+            result = result.replaceAll(pattern, "[RED]" + allergy.trim() + "[/RED]");
         }
 
-        return sb.toString();
+        return result;
     }
 }
