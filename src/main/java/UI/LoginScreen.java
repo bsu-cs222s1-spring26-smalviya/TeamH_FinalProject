@@ -23,8 +23,6 @@ public class LoginScreen {
         return assembleLayout(usernameField, passwordField, loginButton, createAccountButton, messageLabel);
     }
 
-    // UI Builders
-
     private TextField buildUsernameField() {
         TextField field = new TextField();
         field.setPromptText("Username");
@@ -44,9 +42,7 @@ public class LoginScreen {
             Runnable onLoginSuccess
     ) {
         Button loginButton = new Button("Login");
-        loginButton.setOnAction(event ->
-                handleLogin(usernameField, passwordField, messageLabel, onLoginSuccess)
-        );
+        loginButton.setOnAction(event -> handleLogin(usernameField, passwordField, messageLabel, onLoginSuccess));
         return loginButton;
     }
 
@@ -56,9 +52,7 @@ public class LoginScreen {
             Label messageLabel
     ) {
         Button createButton = new Button("Create Account");
-        createButton.setOnAction(event ->
-                handleAccountCreation(usernameField, passwordField, messageLabel)
-        );
+        createButton.setOnAction(event -> handleAccountCreation(usernameField, passwordField, messageLabel));
         return createButton;
     }
 
@@ -78,8 +72,6 @@ public class LoginScreen {
                 messageLabel
         );
     }
-
-    // Event Handlers
 
     private void handleLogin(
             TextField usernameField,
@@ -117,4 +109,3 @@ public class LoginScreen {
         }
     }
 }
-

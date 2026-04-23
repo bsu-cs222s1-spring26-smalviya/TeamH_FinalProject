@@ -2,155 +2,98 @@ package UI;
 
 import edu.bsu.cs222.finalproject.UserStorage;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ListCell;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+
+import java.util.List;
 
 public class SavedRecipesController {
 
-    private final SavedRecipesView view;
-    private final UserStorage storage;
-    private final RecipeService service;
-    private final String allergyRaw;
+    private Stage stage;
+    private RecipeService service;
+    private UserStorage storage;
+    private SavedRecipesView view;
 
-    public SavedRecipesController(SavedRecipesView view, UserStorage storage, RecipeService service, String allergyRaw) {
-        this.view = view;
-        this.storage = storage;
+    public void initialize(Stage stage, RecipeService service, UserStorage storage, SavedRecipesView view) {
+        this.stage = stage;
         this.service = service;
-        this.allergyRaw = allergyRaw;
+        this.storage = storage;
+        this.view = view;
 
-        setupListCellRenderer();
         loadSavedRecipes();
-        setupHandlers();
+
+        applyAllergenHighlighting(view.getSavedList());
+
+        view.getBackButton().setOnAction(e -> goBack());
+        view.getViewButton().setOnAction(e -> openRecipe());
+        view.getDeleteButton().setOnAction(e -> deleteSelected());
+
+        view.getSavedList().setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) openRecipe();
+        });
     }
 
     private void loadSavedRecipes() {
-        String[] allergies = service.parseAllergies(allergyRaw);
-
-        view.getSavedList().getItems().clear();
-
-        for (String recipe : storage.getSavedRecipes()) {
-            String clean = recipe;
-            String id = service.extractId(clean);
-
-            String details = service.getMealDetails(id, allergies).toLowerCase();
-
-            boolean contains = false;
-            for (String allergy : allergies) {
-                if (!allergy.isBlank() && details.contains(allergy.trim())) {
-                    contains = true;
-                    break;
-                }
-            }
-
-            if (contains) {
-                view.getSavedList().getItems().add("[RED]" + recipe + "[/RED]");
-            } else {
-                view.getSavedList().getItems().add(recipe);
-            }
-        }
+        List<String> saved = storage.getSavedRecipes();
+        view.getSavedList().getItems().setAll(saved);
+        view.getSavedList().refresh();
     }
 
-    private void setupHandlers() {
+    private void goBack() {
+        RecipeFinderView finderView = new RecipeFinderView();
+        RecipeFinderController controller = new RecipeFinderController();
+        controller.initialize(stage, service, storage, finderView);
 
-        view.getDeleteButton().setOnAction(e -> {
-            String selected = view.getSavedList().getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                String clean = selected.replace("[RED]", "").replace("[/RED]", "");
-                storage.removeRecipe(clean);
-                loadSavedRecipes();
-            }
-        });
-
-        view.getViewButton().setOnAction(e -> {
-            String selected = view.getSavedList().getSelectionModel().getSelectedItem();
-            if (selected != null) {
-
-                String clean = selected.replace("[RED]", "").replace("[/RED]", "");
-                String id = service.extractId(clean);
-
-                String[] allergies = service.parseAllergies(allergyRaw);
-                String details = service.getMealDetails(id, allergies);
-
-                showRecipePopup(details);
-            }
-        });
-
-        view.getBackButton().setOnAction(e -> {
-            RecipeFinderView finderView = new RecipeFinderView();
-            new RecipeFinderController(finderView, storage, service, (Stage) view.getRoot().getScene().getWindow());
-            ((Stage) view.getRoot().getScene().getWindow()).setScene(new Scene(finderView.getRoot(), 600, 600));
-        });
+        Scene scene = new Scene(finderView.getRoot(), 600, 500);
+        stage.setScene(scene);
     }
 
-    // LISTVIEW RENDERER
+    private void openRecipe() {
+        String selected = view.getSavedList().getSelectionModel().getSelectedItem();
+        if (selected == null || !selected.contains("|")) return;
 
-    private void setupListCellRenderer() {
-        view.getSavedList().setCellFactory(list -> new ListCell<>() {
+        String id = service.extractId(selected);
+        String details = service.getMealDetails(id, service.getAllergies());
+
+        RecipePopup.display(selected, details);
+    }
+
+    private void deleteSelected() {
+        String selected = view.getSavedList().getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        storage.removeRecipe(selected);
+        loadSavedRecipes();
+    }
+
+    private void applyAllergenHighlighting(javafx.scene.control.ListView<String> list) {
+        list.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (empty || item == null) {
-                    setGraphic(null);
                     setText(null);
+                    setStyle("");
                     return;
                 }
 
-                TextFlow flow = buildColoredText(item);
-                setGraphic(flow);
-                setText(null);
+                setText(item);
+
+                if (!item.contains("|")) {
+                    setStyle("");
+                    return;
+                }
+
+                String id = item.substring(item.indexOf("|") + 1).trim();
+
+                boolean containsAllergen = service.recipeContainsAllergen(id, service.getAllergies());
+
+                if (containsAllergen) {
+                    setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                } else {
+                    setStyle("");
+                }
             }
         });
-    }
-
-    // POPUP + SAFE PARSER
-
-    private void showRecipePopup(String details) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Recipe Details");
-
-        TextFlow flow = buildColoredText(details);
-        alert.getDialogPane().setContent(flow);
-        alert.show();
-    }
-
-    private TextFlow buildColoredText(String details) {
-        TextFlow flow = new TextFlow();
-        flow.setPrefWidth(500);
-
-        int index = 0;
-
-        while (index < details.length()) {
-            int start = details.indexOf("[RED]", index);
-
-            if (start == -1) {
-                flow.getChildren().add(new Text(details.substring(index)));
-                break;
-            }
-
-            if (start > index) {
-                flow.getChildren().add(new Text(details.substring(index, start)));
-            }
-
-            int end = details.indexOf("[/RED]", start);
-            if (end == -1) {
-                flow.getChildren().add(new Text(details.substring(start)));
-                break;
-            }
-
-            String redText = details.substring(start + 5, end);
-            Text t = new Text(redText);
-            t.setFill(Color.RED);
-            t.setStyle("-fx-font-weight: bold;");
-            flow.getChildren().add(t);
-
-            index = end + 6;
-        }
-
-        return flow;
     }
 }

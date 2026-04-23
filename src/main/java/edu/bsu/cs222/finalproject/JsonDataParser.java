@@ -76,10 +76,17 @@ public class JsonDataParser {
         String result = text;
 
         for (String allergy : allergies) {
+
+            // FIX: skip empty or blank allergens
             if (allergy == null || allergy.isBlank()) continue;
 
-            String pattern = "(?i)" + allergy.trim();
-            result = result.replaceAll(pattern, "[RED]" + allergy.trim() + "[/RED]");
+            String lower = allergy.toLowerCase();
+
+            try {
+                result = result.replaceAll("(?i)" + lower, "[RED]" + allergy + "[/RED]");
+            } catch (Exception e) {
+                // ignore bad regex
+            }
         }
 
         return result;

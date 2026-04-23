@@ -7,113 +7,143 @@ import java.util.List;
 public class UserStorage {
 
     private final File file = new File("users.txt");
-    private final List<User> users = new ArrayList<>();
-    private User activeUser;
+    private String currentUser = null;
 
     public UserStorage() {
-        loadUsers();
-    }
-
-    public boolean createAccount(String username, String password) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                return false;
-            }
-        }
-
-        User newUser = new User(username, password);
-        users.add(newUser);
-        saveUsers();
-        return true;
-    }
-
-    public boolean login(String username, String password) {
-        for (User u : users) {
-            if (u.getUsername().equals(username) && u.getPassword().equals(password)) {
-                activeUser = u;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void logout() {
-        activeUser = null;
-    }
-
-    public boolean isLoggedIn() {
-        return activeUser != null;
-    }
-
-    public User getActiveUser() {
-        return activeUser;
-    }
-
-    public List<String> getSavedRecipes() {
-        if (activeUser == null) return new ArrayList<>();
-        return activeUser.getSavedRecipes();
-    }
-
-    public void addRecipe(String recipeLine) {
-        if (activeUser == null) return;
-        activeUser.addRecipe(recipeLine);
-        saveUsers();
-    }
-
-    public void removeRecipe(String recipeLine) {
-        if (activeUser == null) return;
-        activeUser.removeRecipe(recipeLine);
-        saveUsers();
-    }
-
-    private void loadUsers() {
-        if (!file.exists()) return;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-
-                if (line.trim().isEmpty()) continue;
-
-                String[] parts = line.split(";");
-
-                if (parts.length < 2) {
-                    System.out.println("Skipping invalid user line: " + line);
-                    continue;
-                }
-
-                String username = parts[0];
-                String password = parts[1];
-
-                User user = new User(username, password);
-
-                if (parts.length > 2) {
-                    String[] recipes = parts[2].split(",");
-                    for (String r : recipes) {
-                        if (!r.isBlank()) {
-                            user.addRecipe(r.trim());
-                        }
-                    }
-                }
-
-                users.add(user);
-            }
-
+        try {
+            if (!file.exists()) file.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void saveUsers() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            for (User u : users) {
-                writer.println(
-                        u.getUsername() + ";" +
-                                u.getPassword() + ";" +
-                                u.getSavedRecipesAsString()
-                );
+    public boolean login(String username, String password) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts.length >= 2) {
+                    if (parts[0].trim().equals(username) &&
+                            parts[1].trim().equals(password)) {
+                        currentUser = username;
+                        return true;
+                    }
+                }
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean createAccount(String username, String password) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts.length >= 1) {
+                    if (parts[0].trim().equals(username)) {
+                        return false;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try (FileWriter fw = new FileWriter(file, true)) {
+            fw.write(username + ";" + password + ";" + System.lineSeparator());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    public List<String> getSavedRecipes() {
+        List<String> list = new ArrayList<>();
+
+        if (currentUser == null) return list;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+
+                if (parts.length >= 3 && parts[0].trim().equals(currentUser)) {
+                    if (parts[2].trim().isEmpty()) return list;
+
+                    String[] recipes = parts[2].split(",");
+                    for (String r : recipes) {
+                        if (!r.isBlank()) list.add(r.trim());
+                    }
+                    return list;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public boolean addRecipe(String recipeLine) {
+        if (currentUser == null) return false;
+
+        List<String> saved = getSavedRecipes();
+        if (saved.contains(recipeLine)) return false;
+
+        saved.add(recipeLine);
+        writeUpdatedUserLine(saved);
+
+        return true;
+    }
+
+    public void removeRecipe(String recipeLine) {
+        if (currentUser == null) return;
+
+        List<String> saved = getSavedRecipes();
+        saved.remove(recipeLine);
+
+        writeUpdatedUserLine(saved);
+    }
+
+    private void writeUpdatedUserLine(List<String> recipes) {
+        List<String> allLines = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+
+                if (parts.length >= 2 && parts[0].trim().equals(currentUser)) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(parts[0]).append(";").append(parts[1]).append(";");
+
+                    for (String r : recipes) {
+                        sb.append(r).append(",");
+                    }
+
+                    allLines.add(sb.toString());
+                } else {
+                    allLines.add(line);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (PrintWriter pw = new PrintWriter(file)) {
+            for (String s : allLines) pw.println(s);
         } catch (IOException e) {
             e.printStackTrace();
         }
