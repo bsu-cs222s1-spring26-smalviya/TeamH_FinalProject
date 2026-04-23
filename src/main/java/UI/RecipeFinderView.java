@@ -15,7 +15,7 @@ public class RecipeFinderView {
     private final Button saveButton = new Button("Save Selected");
 
     public RecipeFinderView() {
-        ingredientField.setPromptText("Enter ingredient");
+        ingredientField.setPromptText("Enter ingredient (comma-separated)");
         allergyField.setPromptText("Allergies (comma-separated)");
 
         root.setPadding(new Insets(20));

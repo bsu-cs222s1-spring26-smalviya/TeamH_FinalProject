@@ -30,14 +30,40 @@ public class RecipeFinderController {
 
         view.getSearchButton().setOnAction(e -> {
             String ingredient = view.getIngredientField().getText().trim();
-
             view.getResultsList().getItems().clear();
             view.getResultsList().getSelectionModel().clearSelection();
 
             String[] results = service.searchByIngredient(ingredient);
             String[] allergies = service.parseAllergies(view.getAllergyField().getText());
+            String[] ingredient2 = service.parseIngredients(ingredient);
+
+            for (int k = 1; k < ingredient2.length; k++){//for testing ingredient2 value
+                System.out.println(ingredient2[k]);
+            }
+            if (ingredient2.length > 1){
+                for (int i = 1; i < results.length; i++){
+                    String containsBoth = results[i];
+                    String id = service.extractId(containsBoth);
+
+                    String fullDetails = service.getMealDetails(id, results).toLowerCase();
+
+                    boolean containsIngredient2 = false;
+
+                    for (String contains : ingredient2) {
+                        if (!contains.isBlank() && fullDetails.contains(contains.trim())) {
+                            containsIngredient2 = true;
+                            break;
+                        }
+                    }
+                    if (containsIngredient2) {
+                        results[i] =  "Contains both: " + containsBoth;
+                    }
+
+                }
+            }
 
             // Highlight entire recipe name if allergen appears ANYWHERE in the recipe
+
             for (int i = 0; i < results.length; i++) {
                 String clean = results[i];
                 String id = service.extractId(clean);
@@ -56,6 +82,7 @@ public class RecipeFinderController {
                     results[i] = "[RED]" + clean + "[/RED]";
                 }
             }
+
 
             view.getResultsList().getItems().setAll(results);
         });

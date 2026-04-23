@@ -32,6 +32,10 @@ public class RecipeService {
         if (raw == null || raw.isBlank()) return new String[0];
         return raw.toLowerCase().split(",");
     }
+    public String[] parseIngredients(String raw){
+        if (raw == null || raw.isBlank()) return new String[0];
+        return raw.toLowerCase().split(",");
+    }
 
     // ⭐ NEW: Highlight allergens in ANY text (used for search results too)
     public String highlightAllergens(String text, String[] allergies) {
