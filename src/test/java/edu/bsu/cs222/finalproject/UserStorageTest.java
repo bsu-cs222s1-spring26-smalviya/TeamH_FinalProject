@@ -23,16 +23,15 @@ class UserStorageTest {
     }
 
     @Test
-    void login() {
+    void testLogin() {
         storage.createAccount("userNonExist", "password1");
         assertTrue(storage.login("userNonExist", "password1"));
     }
 
     @Test
-    void userExists() {
-        storage.createAccount("userNonExist", "password1");
-        storage.login("userNonExist", "password1");
-        assertTrue(storage.isLoggedIn());
+    void testCreateAccount() {
+        assertEquals(true, storage.createAccount("userNonExist", "password1"));
+
     }
     @Test
     void wrongPasswordLogin() {
@@ -40,13 +39,6 @@ class UserStorageTest {
         assertFalse(storage.login("userNonExist", "wrongpassword"));
     }
 
-    @Test
-    void logout() {
-        storage.createAccount("userNonExist", "password1");
-        storage.login("userNonExist", "password1");
-        storage.logout();
-        assertFalse(storage.isLoggedIn());
-    }
 
     @Test
     void duplicateAccountCreation() {

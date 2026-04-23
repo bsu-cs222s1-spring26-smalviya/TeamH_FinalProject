@@ -8,7 +8,7 @@ public class RecipeGrabberTest {
     @Test
     public void testFetchRecipesByIngredient() throws Exception {
         RecipeGrabber grabber = new RecipeGrabber();
-        String json = grabber.fetchRecipesByIngredient("chicken");
+        String json = grabber.getMealsByIngredient("chicken");
 
         assertNotNull(json, "API returned null");
         assertTrue(json.contains("\"meals\""), "JSON missing 'meals' field");
@@ -19,7 +19,7 @@ public class RecipeGrabberTest {
         RecipeGrabber grabber = new RecipeGrabber();
 
         // Known valid ID from TheMealDB
-        String json = grabber.fetchRecipeById("52772");
+        String json = grabber.getMealDetails("52772");
 
         assertNotNull(json, "API returned null");
         assertTrue(json.contains("\"meals\""), "JSON missing 'meals' field");
